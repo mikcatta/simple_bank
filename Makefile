@@ -4,4 +4,7 @@ sqlc:
 test:
 	go test -v -cover ./...
 
-.PHONY: sqlc test
+server:
+	go run main.go
+
+.PHONY: sqlc test server
