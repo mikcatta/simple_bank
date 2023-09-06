@@ -4,8 +4,10 @@ sql:
     queries: "./db/query"
     engine: "postgresql"
     
+    
 
     gen:
       go:
         out: "./db/sqlc"
         emit_json_tags: true
+        emit_empty_slices: true
