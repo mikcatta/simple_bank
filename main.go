@@ -27,7 +27,10 @@ func main() {
 
 	fmt.Println("Starting .... ", conn.Stats())
 
-	server := api.NewServer(store)
+	server, err := api.NewServer(config, store)
+	if err != nil {
+		log.Fatal("cannot create server:", err)
+	}
 
 	err = server.Start(config.ServerAddress)
 	if err != nil {
