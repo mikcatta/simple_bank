@@ -6,9 +6,8 @@ import (
 	"fmt"
 )
 
-/* type Store interface {
-
-}*/
+type IStore interface {
+}
 
 type Store struct {
 	*Queries
