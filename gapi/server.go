@@ -7,26 +7,29 @@ import (
 	"github.com/mikcatta/simple_bank/pb"
 	"github.com/mikcatta/simple_bank/token"
 	"github.com/mikcatta/simple_bank/util"
+	"github.com/mikcatta/simple_bank/worker"
 
 	db "github.com/mikcatta/simple_bank/db/sqlc"
 )
 
 type Server struct {
 	pb.UnimplementedSimpleBankServer
-	config     util.Config
-	store      db.Store
-	tokenMaker token.Maker
+	config          util.Config
+	store           db.Store
+	tokenMaker      token.Maker
+	taskDistributor worker.TaskDistributor
 }
 
-func NewServer(config util.Config, store db.Store) (*Server, error) {
+func NewServer(config util.Config, store db.Store, taskDistributor worker.TaskDistributor) (*Server, error) {
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetric)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker : %w", err)
 	}
 	server := &Server{
-		config:     config,
-		store:      store,
-		tokenMaker: tokenMaker,
+		config:          config,
+		store:           store,
+		tokenMaker:      tokenMaker,
+		taskDistributor: taskDistributor,
 	}
 
 	return server, nil
