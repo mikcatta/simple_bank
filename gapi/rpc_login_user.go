@@ -2,7 +2,6 @@ package gapi
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/mikcatta/simple_bank/pb"
 	"github.com/mikcatta/simple_bank/util"
@@ -12,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/mikcatta/simple_bank/db/sqlc"
 	db "github.com/mikcatta/simple_bank/db/sqlc"
 )
 
@@ -23,7 +23,7 @@ func (server *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (
 
 	user, err := server.store.GetUser(ctx, req.GetUsername())
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == sqlc.ErrRecordNotFound {
 			return nil, status.Errorf(codes.NotFound, "user not found")
 		}
 		return nil, status.Errorf(codes.Internal, "failed to find user")

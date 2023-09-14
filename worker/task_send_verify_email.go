@@ -2,7 +2,6 @@ package worker
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/mikcatta/simple_bank/util"
 	"github.com/rs/zerolog/log"
 
+	"github.com/mikcatta/simple_bank/db/sqlc"
 	db "github.com/mikcatta/simple_bank/db/sqlc"
 )
 
@@ -54,7 +54,7 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 
 	user, err := processor.store.GetUser(ctx, payload.Username)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == sqlc.ErrRecordNotFound {
 			return fmt.Errorf("user does not exist : %w", asynq.SkipRetry)
 		}
 		return fmt.Errorf("failed to get user : %w", err)

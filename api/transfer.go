@@ -1,12 +1,12 @@
 package api
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mikcatta/simple_bank/db/sqlc"
 	db "github.com/mikcatta/simple_bank/db/sqlc"
 	"github.com/mikcatta/simple_bank/token"
 )
@@ -62,7 +62,7 @@ func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency s
 
 	account, err := server.store.GetAccount(ctx, accountID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == sqlc.ErrRecordNotFound {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return account, false
 		}

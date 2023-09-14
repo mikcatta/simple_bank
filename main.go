@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"net"
 	"net/http"
 	"os"
 
 	"github.com/hibiken/asynq"
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/mikcatta/simple_bank/gapi"
 	"github.com/mikcatta/simple_bank/mail"
 	"github.com/mikcatta/simple_bank/pb"
@@ -35,7 +35,7 @@ func main() {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
-	conn, err := sql.Open(config.DBDriver, config.DBSource)
+	connPool, err := pgxpool.New(context.Background(), config.DBSource)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot connect to the db")
 	}
@@ -46,10 +46,8 @@ func main() {
 	}
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
 
-	store := db.NewStore(conn)
+	store := db.NewStore(connPool)
 
-	//fmt.Println("Starting .... ", conn.Stats())
-	log.Info().Msgf("Starting up.... %s", config.DBDriver)
 	go runTaskProcessor(config, redisOpt, *store)
 	go runGatewayServer(config, *store, taskDistributor)
 	runGrpcServer(config, *store, taskDistributor)

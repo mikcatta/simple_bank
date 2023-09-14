@@ -1,14 +1,13 @@
 package api
 
 import (
-	"database/sql"
 	"errors"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
 
+	"github.com/mikcatta/simple_bank/db/sqlc"
 	db "github.com/mikcatta/simple_bank/db/sqlc"
 	"github.com/mikcatta/simple_bank/token"
 )
@@ -38,15 +37,10 @@ func (server *Server) createAccount(ctx *gin.Context) {
 
 	account, err := server.store.CreateAccount(ctx, arg)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
-
-			case "unique_violation", "foreign_key_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-
-			}
-
-			log.Println(pqErr.Code.Name())
+		errCode := db.ErrorCode(err)
+		if errCode == db.ForeignKeyViolation || errCode == db.UniqueViolation {
+			ctx.JSON(http.StatusForbidden, errorResponse(err))
+			return
 		}
 
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -73,7 +67,7 @@ func (server *Server) getAccount(ctx *gin.Context) {
 
 	account, err := server.store.GetAccount(ctx, req.ID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sqlc.ErrRecordNotFound) {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
