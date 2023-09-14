@@ -10,6 +10,7 @@ import (
 	"github.com/hibiken/asynq"
 	_ "github.com/lib/pq"
 	"github.com/mikcatta/simple_bank/gapi"
+	"github.com/mikcatta/simple_bank/mail"
 	"github.com/mikcatta/simple_bank/pb"
 	"github.com/mikcatta/simple_bank/util"
 	"github.com/mikcatta/simple_bank/worker"
@@ -49,13 +50,14 @@ func main() {
 
 	//fmt.Println("Starting .... ", conn.Stats())
 	log.Info().Msgf("Starting up.... %s", config.DBDriver)
-	go runTaskProcessor(redisOpt, *store)
+	go runTaskProcessor(config, redisOpt, *store)
 	go runGatewayServer(config, *store, taskDistributor)
 	runGrpcServer(config, *store, taskDistributor)
 }
 
-func runTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) {
-	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store)
+func runTaskProcessor(config util.Config, redisOpt asynq.RedisClientOpt, store db.Store) {
+	mailer := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mailer)
 	log.Info().Msg("start task processor")
 	err := taskProcessor.Start()
 	if err != nil {
